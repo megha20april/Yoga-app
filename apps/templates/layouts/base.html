@@ -22,7 +22,7 @@
   <link rel="icon" type="image/png" href="{{ config.ASSETS_ROOT }}/img/favicon.png">
 
   <title>
-    Soft UI Dashboard - {% block title %}{% endblock %} | AppSeed
+    Yoga Trainer - {% block title %}{% endblock %} | NetherRealm Coders
   </title>
 
   <!--     Fonts and icons     -->
@@ -44,7 +44,9 @@
 </head>
 <body class="g-sidenav-show  bg-gray-100">
   
-  {% include "includes/sidebar.html" %} 
+  {% if show_sideBar %}
+    {% include "includes/sidebar.html" %}
+  {% endif %}
 
   <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
 

@@ -1,0 +1,152 @@
+{% extends 'layouts/base.html' %}
+
+{% block title %} Video Interface {% endblock title %}
+
+<!-- Specific CSS goes HERE -->
+{% block stylesheets %}
+<style>
+  .outer-rectangle {
+    border: 2px solid blue;
+    padding: 15px;
+  }
+
+  .circle {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid blue;
+  }
+
+  .oval {
+    width: 100px;
+    height: 50px;
+    border-radius: 50px;
+    border: 2px solid blue;
+    margin: 10px auto;
+  }
+</style>
+{% endblock stylesheets %}
+
+{% block content %}
+<div class="container-fluid py-4">
+
+  <div class="row">
+    <!-- Left Side -->
+    <div class="col-lg-2">
+      <div class="card h-50"> <!-- Increased height -->
+
+        <!-- Timer Section -->
+        <div class="p-1">
+          <div class="d-flex align-items-center gap-2">
+            <h6 class="mb-0">Timer</h6>
+            <i class="fa-solid fa-stopwatch"></i>
+          </div>
+          <span class="display-8 text-success fw-bold">25:00</span>
+        </div>
+
+        <!-- Calories Section -->
+        <div class="p-1">
+          <div class="d-flex align-items-center gap-2">
+            <h6 class="mb-0">Calories</h6>
+            <i class="fa-solid fa-fire"></i>
+          </div>
+          <span class="display-8 text-warning fw-bold">500</span>
+        </div>
+
+        <!-- Heart Rate Section -->
+        <div class="p-1">
+          <div class="d-flex align-items-center gap-2">
+            <h6 class="mb-0">Heart rate</h6>
+            <i class="fa-solid fa-heartbeat"></i>
+          </div>
+          <span class="display-6 text-danger fw-bold">80 bpm</span>
+        </div>
+
+       
+
+      </div>
+
+      <!-- Shapes Section -->
+      <div class="card text-center mt-3">
+        <div class="d-flex justify-content-center align-items-center p-3">
+          <div class="outer-rectangle">
+            <div class="d-flex justify-content-between gap-2">
+              <div class="circle"></div>
+              <div class="circle"></div>
+            </div>
+            <div class="oval"></div>
+            <div class="d-flex justify-content-between gap-2">
+              <div class="circle"></div>
+              <div class="circle"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card text-center mt-3">
+         <!-- Stop Button Section -->
+         <div class="p-3">
+          <a href="{{ url_for('video_feed_blueprint.stop_video') }}" class="btn btn-secondary w-100 m-0">Stop</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Side -->
+    <div class="col-lg-10">
+      <div class="row h-100"> <!-- Ensure row takes full height -->
+
+        <!-- First Card -->
+        <div class="col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="p-4 text-center">
+              <h6>{{ pose.name }}</h6>
+              <img class="w-75" src='{{ config.ASSETS_ROOT }}/img/yoga_poses/{{ pose.pose_key }}.jpg' alt='{{ pose_name }}'>
+            </div>
+          </div>
+        </div>
+
+        <!-- Second Card -->
+        <div class="col-md-6 mb-4">
+          <div class="card h-100">
+            <div class="p-4 text-center">
+              <img src="{{ url_for('video_feed_blueprint.video_feed') }}" class="img-fluid" alt="Yoga Pose Video Feed">
+            </div>
+          </div>
+        </div>
+
+        <!-- Output Section -->
+        <div class="col-md-12">
+          <div class="card p-4">
+            <div class="d-flex justify-content-between align-items-center">
+              <h6 class="mb-0">Output</h6>
+              <div>data</div>
+              <a href="{{ url_for('video_feed_blueprint.analyze', pose_index=next_pose_index) }}" class="btn btn-secondary">
+                {% if is_last_pose %}
+                    Done
+                {% else %}
+                    Next
+                {% endif %}
+              </a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  {% include "includes/footer.html" %}
+
+</div>
+{% endblock content %}
+
+
+
+<!-- Specific JS goes HERE -->
+{% block javascripts %}
+<script>
+  window.addEventListener('beforeunload', function() {
+      fetch("{{ url_for('video_feed_blueprint.stop_video') }}");
+  });
+</script>
+{% endblock javascripts %}
