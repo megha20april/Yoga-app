@@ -19,10 +19,10 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <link rel="apple-touch-icon" sizes="76x76" href="{{ config.ASSETS_ROOT }}/img/apple-icon.png">
-  <link rel="icon" type="image/png" href="{{ config.ASSETS_ROOT }}/img/favicon.png">
+  <link rel="icon" type="image/png" href="{{ config.ASSETS_ROOT }}/img/logos/zenmat.png">
 
   <title>
-    Yoga Trainer - {% block title %}{% endblock %} | NetherRealm Coders
+    ZenMat - {% block title %}{% endblock %} | NetherRealm Coders
   </title>
 
   <!--     Fonts and icons     -->
@@ -50,14 +50,16 @@
 
   <main class="main-content position-relative max-height-vh-100 h-100 border-radius-lg ">
 
-    {% include "includes/navigation.html" %} 
+    {% if show_nav|default(True) %}
+      {% include "includes/navigation.html" %}
+    {% endif %}
 
     {% block content %}{% endblock content %}
 
   </main>
 
   <!-- APP Configurator -->
-  {% include "includes/fixed-plugin.html" %} 
+   
 
   <!-- Core JS Files -->
   {% include "includes/scripts.html" %}

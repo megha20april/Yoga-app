@@ -33,33 +33,41 @@
   <div class="row">
     <!-- Left Side -->
     <div class="col-lg-2">
-      <div class="card h-50"> <!-- Increased height -->
+      <div class="card h-auto"> <!-- Increased height -->
+
+        <div class="px-3 py-2">
+          <div class="d-flex align-items-center gap-2">
+            <h6 class="mb-0">Co2 Levels</h6>
+            <i class="fa-solid fa-stopwatch"></i>
+          </div>
+          <span class="h3 text-success fw-bold">25:00</span>
+        </div>
 
         <!-- Timer Section -->
-        <div class="p-1">
+        <div class="px-3 py-2">
           <div class="d-flex align-items-center gap-2">
             <h6 class="mb-0">Timer</h6>
             <i class="fa-solid fa-stopwatch"></i>
           </div>
-          <span class="display-8 text-success fw-bold">25:00</span>
+          <span class="h3 text-success fw-bold">25:00</span>
         </div>
 
         <!-- Calories Section -->
-        <div class="p-1">
+        <div class="px-3 py-2">
           <div class="d-flex align-items-center gap-2">
             <h6 class="mb-0">Calories</h6>
             <i class="fa-solid fa-fire"></i>
           </div>
-          <span class="display-8 text-warning fw-bold">500</span>
+          <span class="h3 text-warning fw-bold">500</span>
         </div>
 
         <!-- Heart Rate Section -->
-        <div class="p-1">
+        <div class="px-3 py-2">
           <div class="d-flex align-items-center gap-2">
             <h6 class="mb-0">Heart rate</h6>
             <i class="fa-solid fa-heartbeat"></i>
           </div>
-          <span class="display-6 text-danger fw-bold">80 bpm</span>
+          <span class="h3 text-danger fw-bold">80 bpm</span>
         </div>
 
        
@@ -71,13 +79,13 @@
         <div class="d-flex justify-content-center align-items-center p-3">
           <div class="outer-rectangle">
             <div class="d-flex justify-content-between gap-2">
-              <div class="circle"></div>
-              <div class="circle"></div>
+              <div id="leftHand" class="circle"></div>
+              <div id="rightHand" class="circle"></div>
             </div>
-            <div class="oval"></div>
+            <div id="base" class="oval"></div>
             <div class="d-flex justify-content-between gap-2">
-              <div class="circle"></div>
-              <div class="circle"></div>
+              <div id="leftLeg" class="circle"></div>
+              <div id="rightLeg" class="circle"></div>
             </div>
           </div>
         </div>
@@ -107,9 +115,9 @@
 
         <!-- Second Card -->
         <div class="col-md-6 mb-4">
-          <div class="card h-100">
-            <div class="p-4 text-center">
-              <img src="{{ url_for('video_feed_blueprint.video_feed') }}" class="img-fluid" alt="Yoga Pose Video Feed">
+          <div class="card h-100 d-flex justify-content-center align-items-center">
+            <div class="p-4">
+              <img src="{{ url_for('video_feed_blueprint.video_feed', target=pose.pose_key) }}" class="img-fluid" alt="Yoga Pose Video Feed">
             </div>
           </div>
         </div>
@@ -119,7 +127,7 @@
           <div class="card p-4">
             <div class="d-flex justify-content-between align-items-center">
               <h6 class="mb-0">Output</h6>
-              <div>data</div>
+              <div id="feedback">data</div>
               <a href="{{ url_for('video_feed_blueprint.analyze', pose_index=next_pose_index) }}" class="btn btn-secondary">
                 {% if is_last_pose %}
                     Done
@@ -135,7 +143,7 @@
     </div>
   </div>
 
-  {% include "includes/footer.html" %}
+  
 
 </div>
 {% endblock content %}
@@ -147,6 +155,26 @@
 <script>
   window.addEventListener('beforeunload', function() {
       fetch("{{ url_for('video_feed_blueprint.stop_video') }}");
-  });
+  })
+  
+  function updateFeedback() {
+    fetch('/get_text')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('feedback').innerText = data.text;
+            console.log(data.text)
+        });
+}
+
+// Poll the server every second for new text
+setInterval(updateFeedback, 1000);
+
+
+  setInterval(()=>{
+    console.log(((Math.random()*100) + 400).toFixed(2))
+  }, 1000)
+
+
+
 </script>
 {% endblock javascripts %}

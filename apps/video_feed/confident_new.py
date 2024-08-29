@@ -13,8 +13,8 @@ pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_t
 current_dir = os.path.dirname(__file__)
 
 # Construct the path to the pickle files
-model_filename = os.path.join(current_dir, 'yoga_pose_model_logistic.pkl')
-scaler_filename = os.path.join(current_dir, 'yoga_pose_scaler_logistic.pkl')
+model_filename = os.path.join(current_dir, 'model_try.pkl')
+scaler_filename = os.path.join(current_dir, 'scaler_try.pkl')
 
 
 with open(model_filename, 'rb') as file:
