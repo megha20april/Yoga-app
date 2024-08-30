@@ -24,19 +24,27 @@ tts_queue = queue.Queue()
 
 def tts_worker():
     while True:
-        text = tts_queue.get()
+        try:
+            text = tts_queue.get(timeout=1)  # Adjust timeout as needed
+        except queue.Empty:
+            continue
         if text is None:
             break
         engine.say(text)
         engine.runAndWait()
         tts_queue.task_done()
 
-threading.Thread(target=tts_worker).start()
+def start_tts_thread():
+    thread = threading.Thread(target=tts_worker, daemon=True)
+    thread.start()
+    return thread
+
+# Start the TTS worker thread
+tts_thread = start_tts_thread()
 
 def speak(text):
     tts_queue.put(text)
 
-    # Run the speak function in a new thread
 
 camera_on = False
 
@@ -57,10 +65,26 @@ def update_text(text):
     global current_text
     current_text = text
 
+reps = 0
 
+@blueprint.route('/get_reps')
+def get_reps():
+    return jsonify({'text': reps})
+
+def update_reps(n):
+    global reps
+    reps = n
+
+fsrentry = {
+    "leftHand" : 0,
+    "rightHand" : 0,
+    "leftFoot" : 301,
+    "rightFoot" : 301,
+}
 
 @blueprint.route('/interface/<int:pose_index>')
 def analyze(pose_index):
+    global entry
     pose_data = [
     {"name": "Cobra Pose (Utkatasana)", "level": "Beginner", "pose_key": "Cobra"},
     {"name": "Chair Pose (Bhujangasana)", "level": "Beginner", "pose_key": "Chair"},
@@ -83,7 +107,9 @@ def analyze(pose_index):
         show_nav=False,
         pose=pose, 
         next_pose_index=next_pose_index,
-        is_last_pose=is_last_pose)
+        is_last_pose=is_last_pose,
+        entry = fsrentry
+        )
 
 
 
@@ -104,7 +130,7 @@ alpha = 0.3  # Adjusted for more responsive smoothing
 smoothed_landmarks = None
 
 # Confidence threshold
-CONFIDENCE_THRESHOLD = 0.8  # Increased for more reliable predictions
+CONFIDENCE_THRESHOLD = 0.7  # Increased for more reliable predictions
 
 # Pose hold time threshold
 POSE_HOLD_THRESHOLD = 5  # Increased to 5 seconds for a more challenging hold
@@ -113,15 +139,19 @@ POSE_HOLD_THRESHOLD = 5  # Increased to 5 seconds for a more challenging hold
 last_audio_time = 0
 AUDIO_COOLDOWN = 5  # Cooldown period for audio feedback in seconds
 
+# Weighted confidence variables
+confidence_window = deque(maxlen=10)  # Store the last 10 confidence values
+
+
 # Last detected pose
 last_detected_pose = None
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 def generate_frames(target):
     global camera_on, smoothed_landmarks, last_audio_time, last_detected_pose, last_feedback_confidence, last_feedback_time, high_confidence_spoken
     global pose_tracker, current_pose, pose_hold_time, pose_start_time, rep_count, alpha, CONFIDENCE_THRESHOLD, POSE_HOLD_THRESHOLD, AUDIO_COOLDOWN
-    cap = cv2.VideoCapture(1)
+    cap = cv2.VideoCapture(0)
     camera_on = True
     if not target:
         update_text("no target")
@@ -136,7 +166,7 @@ def generate_frames(target):
         if not ret: 
             update_text("Camera feed failed. Restarting the camera.")
             cap.release()
-            cap = cv2.VideoCapture(1)  # Re-initialize the camera
+            cap = cv2.VideoCapture(0)  # Re-initialize the camera
             continue
 
         # Convert the BGR image to RGB
@@ -152,6 +182,8 @@ def generate_frames(target):
         landmarks = extract_landmarks(results)
 
         speak(yoga_poses_data[target])
+
+        confidence = 0
         
         if landmarks is not None:
             # Apply smoothing filter
@@ -161,13 +193,19 @@ def generate_frames(target):
                 smoothed_landmarks = alpha * landmarks + (1 - alpha) * smoothed_landmarks
 
         
-            global prediction, confidence
+            
             # Make prediction
             prediction, confidence = predict_with_confidence(model, scaler, landmarks)
-        
+
+             # Update confidence window
+            confidence_window.append(confidence)
+            
+            # Calculate weighted confidence
+            weighted_confidence = np.average(confidence_window, weights=range(1, len(confidence_window) + 1))
+            
 
             # Update pose tracker
-            if confidence > CONFIDENCE_THRESHOLD:
+            if weighted_confidence > CONFIDENCE_THRESHOLD:
                 pose_tracker.append(prediction)
 
 
@@ -191,12 +229,12 @@ def generate_frames(target):
                         
                         # Display the prediction and confidence
                         cv2.putText(image, f"Pose: {current_pose}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                        cv2.putText(image, f"Confidence: {confidence:.2f}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                        cv2.putText(image, f"Confidence: {weighted_confidence:.2f}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                         
 
                         # Timer for pose hold
                         current_time = time.time()
-                        if current_pose in yoga_poses_data and confidence > CONFIDENCE_THRESHOLD:
+                        if current_pose in yoga_poses_data and weighted_confidence > CONFIDENCE_THRESHOLD:
                             if pose_start_time is None:
                                 pose_start_time = current_time
                             pose_hold_time = current_time - pose_start_time
@@ -213,8 +251,10 @@ def generate_frames(target):
                         # Rep counter
                         if current_pose in yoga_poses_data and pose_hold_time > POSE_HOLD_THRESHOLD:
                             rep_count += 1
+
                             pose_start_time = None  # Reset timer
                             update_text(f"Rep {rep_count} completed")
+                            update_reps(rep_count)
                         cv2.putText(image, f"Reps: {rep_count}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                     
                         
@@ -229,37 +269,43 @@ def generate_frames(target):
 
 
         current_time = time.time()
+        isProgress = 0
 
-        if confidence <= 0.5:
+        
+        if weighted_confidence <= 0.5:
             if current_time - last_feedback_time >= 5:  # Check if 3 seconds have passed
                 update_text("Pose not right. Try again Please.")
+                isProgress+=1
+                # if isProgress == 20:
+                #     speak(yoga_poses_data[target])
                 last_feedback_time = current_time
-                last_feedback_confidence = confidence
+                last_feedback_confidence = weighted_confidence
                 high_confidence_spoken = False
-            elif confidence > last_feedback_confidence:
+            elif weighted_confidence > last_feedback_confidence:
                 update_text("That's better! Keep improving.")
                 last_feedback_time = current_time
-                last_feedback_confidence = confidence
-        elif 0.5 < confidence < 0.8:
+                last_feedback_confidence = weighted_confidence
+        elif 0.5 < weighted_confidence < 0.8:
             if current_time - last_feedback_time >= 5:  # Check if 3 seconds have passed
                 update_text("Good going. Keep trying!")
                 last_feedback_time = current_time
-                last_feedback_confidence = confidence
+                last_feedback_confidence = weighted_confidence
                 high_confidence_spoken = False
-            elif confidence > last_feedback_confidence:
+            elif weighted_confidence > last_feedback_confidence:
                 update_text("You're improving! Keep it up.")
                 last_feedback_time = current_time
-                last_feedback_confidence = confidence
+                last_feedback_confidence = weighted_confidence
         else:  # This covers confidence >= 0.8
             if not high_confidence_spoken:
                 update_text("Congrats! You've got how to do this pose now.")
+                # speak("Congrats! You've got how to do this pose now.")
                 high_confidence_spoken = True
                 last_feedback_time = current_time
-                last_feedback_confidence = confidence
-            elif confidence < last_feedback_confidence:
+                last_feedback_confidence = weighted_confidence
+            elif weighted_confidence < last_feedback_confidence:
                 high_confidence_spoken = False  # Reset so it can update_text again if confidence goes back up
-        if confidence > last_feedback_confidence:
-                last_feedback_confidence = confidence
+        if weighted_confidence > last_feedback_confidence:
+                last_feedback_confidence = weighted_confidence
 
 
         
@@ -291,7 +337,45 @@ def video_feed(target):
 
 @blueprint.route('/stop_video')
 def stop_video():
-    global camera_on, cap
+    global camera_on,cap, smoothed_landmarks, last_audio_time, last_detected_pose, last_feedback_confidence, last_feedback_time, high_confidence_spoken
+    global pose_tracker, current_pose, pose_hold_time, pose_start_time, rep_count, alpha, CONFIDENCE_THRESHOLD, POSE_HOLD_THRESHOLD, AUDIO_COOLDOWN
+    global reps, current_text
+    
+    
+
+    #initializing variables for feedback mech
+    last_feedback_time = 0
+    last_feedback_confidence = 0
+    high_confidence_spoken = False
+
+    # Pose tracking
+    pose_tracker = deque(maxlen=15)
+    current_pose = None
+    pose_start_time = None
+    pose_hold_time = 0
+    rep_count = 0
+
+    # Smoothing filter
+    alpha = 0.3  # Adjusted for more responsive smoothing
+    smoothed_landmarks = None
+
+    # Confidence threshold
+    CONFIDENCE_THRESHOLD = 0.7  # Increased for more reliable predictions
+
+    # Pose hold time threshold
+    POSE_HOLD_THRESHOLD = 5  # Increased to 5 seconds for a more challenging hold
+
+    # Last audio feedback time
+    last_audio_time = 0
+    AUDIO_COOLDOWN = 5  # Cooldown period for audio feedback in seconds
+
+    # Weighted confidence variables
+    confidence_window = deque(maxlen=10)  # Store the last 10 confidence values
+    reps=0
+    current_text = ''
+
+    # Last detected pose
+    last_detected_pose = None
     camera_on = False
     cap.release()
     return redirect(url_for('home_blueprint.index'))

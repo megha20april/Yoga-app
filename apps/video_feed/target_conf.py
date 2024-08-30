@@ -26,6 +26,15 @@ last_feedback_time = 0
 last_feedback_confidence = 0
 high_confidence_spoken = False
 
+# Cooldown period for feedback
+COOLDOWN_PERIOD = 5  # seconds
+
+# Confidence threshold
+CONFIDENCE_THRESHOLD = 0.6  # Increased for more reliable predictions
+
+# Weighted confidence variables
+confidence_window = deque(maxlen=10)  # Store the last 10 confidence values
+
 # List of yoga poses and their instructions
 yoga_poses = [
     "Chair Pose (Utkatasana)",
@@ -53,9 +62,6 @@ rep_count = 0
 alpha = 0.3  # Adjusted for more responsive smoothing
 smoothed_landmarks = None
 
-# Confidence threshold
-CONFIDENCE_THRESHOLD = 0.8  # Increased for more reliable predictions
-
 # Pose hold time threshold
 POSE_HOLD_THRESHOLD = 5  # Increased to 5 seconds for a more challenging hold
 
@@ -63,8 +69,7 @@ POSE_HOLD_THRESHOLD = 5  # Increased to 5 seconds for a more challenging hold
 last_detected_pose = None
 
 # This variable will be set by the web interface
-target_pose = "Tree Pose (Vrikshasana)"  
-#target_pose = request.form.get('pose')
+target_pose = "Chair Pose (Utkatasana)" 
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -98,8 +103,14 @@ while cap.isOpened():
         prediction = model.predict(landmarks_scaled)[0]
         confidence = np.max(model.predict_proba(landmarks_scaled))
         
+        # Update confidence window
+        confidence_window.append(confidence)
+        
+        # Calculate weighted confidence
+        weighted_confidence = np.average(confidence_window, weights=range(1, len(confidence_window) + 1))
+        
         # Check if the detected pose matches the target pose
-        if confidence > CONFIDENCE_THRESHOLD:
+        if weighted_confidence > CONFIDENCE_THRESHOLD:
             pose_tracker.append(prediction)
             if len(pose_tracker) == pose_tracker.maxlen:
                 current_pose = max(set(pose_tracker), key=pose_tracker.count)
@@ -121,10 +132,10 @@ while cap.isOpened():
 
                     # Display the prediction and confidence
                     cv2.putText(image, f"Pose: {current_pose}", (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
-                    cv2.putText(image, f"Confidence: {confidence:.2f}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
+                    cv2.putText(image, f"Confidence: {weighted_confidence:.2f}", (10, 60), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                     
                     # Timer for pose hold
-                    if current_pose in yoga_poses and confidence > CONFIDENCE_THRESHOLD:
+                    if current_pose in yoga_poses and weighted_confidence > CONFIDENCE_THRESHOLD:
                         if pose_start_time is None:
                             pose_start_time = time.time()
                         pose_hold_time = time.time() - pose_start_time
@@ -134,7 +145,6 @@ while cap.isOpened():
                     if current_pose in yoga_poses and pose_hold_time > POSE_HOLD_THRESHOLD:
                         rep_count += 1
                         pose_start_time = None  # Reset timer
-                        # speak(f"Rep {rep_count} completed")
                     cv2.putText(image, f"Reps: {rep_count}", (10, 150), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2)
                 else:
                     print(f"Detected pose '{current_pose}' does not match target '{target_pose}'. Ignoring...")
@@ -148,36 +158,46 @@ while cap.isOpened():
     # Feedback mechanism
     current_time = time.time()
 
-    if confidence <= 0.5:
-        if current_time - last_feedback_time >= 5:  # Check if 5 seconds have passed
+    if weighted_confidence <= 0.5:
+        if current_time - last_feedback_time >= COOLDOWN_PERIOD:  # Check if cooldown period has passed
             print("Pose not right. Try again Please.")
+            '''engine.say("Pose not right. Try again, please.")
+            engine.runAndWait()'''
             last_feedback_time = current_time
-            last_feedback_confidence = confidence
+            last_feedback_confidence = weighted_confidence
             high_confidence_spoken = False
-        elif confidence > last_feedback_confidence:
+        elif weighted_confidence > last_feedback_confidence:
             print("That's better! Keep improving.")
+            '''engine.say("That's better! Keep improving.")
+            engine.runAndWait()'''
             last_feedback_time = current_time
-            last_feedback_confidence = confidence
-    elif 0.5 < confidence < 0.8:
-        if current_time - last_feedback_time >= 5:  # Check if 5 seconds have passed
+            last_feedback_confidence = weighted_confidence
+    elif 0.5 < weighted_confidence < 0.8:
+        if current_time - last_feedback_time >= COOLDOWN_PERIOD:  # Check if cooldown period has passed
             print("Good going. Keep trying!")
+            '''engine.say("Good going. Keep trying!")
+            engine.runAndWait()'''
             last_feedback_time = current_time
-            last_feedback_confidence = confidence
+            last_feedback_confidence = weighted_confidence
             high_confidence_spoken = False
-        elif confidence > last_feedback_confidence:
+        elif weighted_confidence > last_feedback_confidence:
             print("You're improving! Keep it up.")
+            '''engine.say("You're improving! Keep it up.")
+            engine.runAndWait()'''
             last_feedback_time = current_time
-            last_feedback_confidence = confidence
-    else:  # This covers confidence >= 0.8
+            last_feedback_confidence = weighted_confidence
+    else:  # This covers weighted_confidence >= 0.8
         if not high_confidence_spoken:
             print("Congrats! You've got how to do this pose now.")
+            '''engine.say("Congrats! You've got how to do this pose now.")
+            engine.runAndWait()'''
             high_confidence_spoken = True
             last_feedback_time = current_time
-            last_feedback_confidence = confidence
-        elif confidence < last_feedback_confidence:
+            last_feedback_confidence = weighted_confidence
+        elif weighted_confidence < last_feedback_confidence:
             high_confidence_spoken = False  # Reset so it can speak again if confidence goes back up
-    if confidence > last_feedback_confidence:
-            last_feedback_confidence = confidence
+    if weighted_confidence > last_feedback_confidence:
+            last_feedback_confidence = weighted_confidence
 
     # Draw pose landmarks on the image
     if results.pose_landmarks:
