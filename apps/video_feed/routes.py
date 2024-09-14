@@ -1,5 +1,9 @@
 import cv2
-from flask import render_template, request, Response, redirect, url_for, jsonify
+from flask import render_template, request, Response, redirect, url_for, jsonify, session
+from flask_login import current_user
+from apps.video_feed.dbmodels import YogaSession, HeartRateData, YogaPoseData
+from datetime import datetime, timezone
+from apps import db
 from apps.video_feed.confident_new import extract_landmarks, predict_with_confidence, pose, model, scaler, mp_drawing, mp_pose
 from apps.video_feed import blueprint
 from apps.config import API_GENERATOR
@@ -9,41 +13,25 @@ import numpy as np
 import warnings
 import pyttsx3
 import threading
-import queue
+from sqlalchemy import func
 
 warnings.filterwarnings("ignore", category=UserWarning, module='google.protobuf')
 
 
-# Initialize text-to-speech engine
-engine = pyttsx3.init()
-engine.setProperty('rate', 150)  # Speed of speech
 
-
-# Queue for managing TTS requests
-tts_queue = queue.Queue()
-
-def tts_worker():
-    while True:
-        try:
-            text = tts_queue.get(timeout=1)  # Adjust timeout as needed
-        except queue.Empty:
-            continue
-        if text is None:
-            break
-        engine.say(text)
-        engine.runAndWait()
-        tts_queue.task_done()
-
-def start_tts_thread():
-    thread = threading.Thread(target=tts_worker, daemon=True)
-    thread.start()
-    return thread
-
-# Start the TTS worker thread
-tts_thread = start_tts_thread()
 
 def speak(text):
-    tts_queue.put(text)
+    def speak_thread():
+        engine = pyttsx3.init()
+        engine.say(text)
+        engine.runAndWait()
+
+    # Start the TTS in a new thread
+    tts_thread = threading.Thread(target=speak_thread)
+    tts_thread.start()
+
+
+
 
 
 camera_on = False
@@ -75,20 +63,146 @@ def update_reps(n):
     global reps
     reps = n
 
-fsrentry = {
-    "leftHand" : 0,
-    "rightHand" : 0,
-    "leftFoot" : 301,
-    "rightFoot" : 301,
-}
+
+@blueprint.route('/save-bpm', methods=['POST'])
+def save_bpm():
+    bpm_data = request.json
+    bpm = bpm_data['bpm']
+    timestamp = bpm_data['timestamp']
+    pose = bpm_data['pose_key']
+    
+    # Assuming the session ID is already created and stored
+    session_id = session.get('yoga_session_id')
+    
+    # Store the BPM data in the database
+    heart_rate_entry = HeartRateData(
+        session_id=session_id,
+        heart_rate=bpm,
+        timestamp=timestamp,
+        pose_name=pose
+    )
+    db.session.add(heart_rate_entry)
+    db.session.commit()
+
+    return jsonify({"message": "BPM data saved successfully."})
+
+
+@blueprint.route('/post_session', methods=['POST'])
+def post_session():
+    global session
+    data = request.json
+    pose_name = data["pose"]
+    calories_burned = data["calories"]  # Calculate or fetch this from the session
+    time_string = data["time"]  # Duration in seconds
+    session_id=session.get('yoga_session_id')
+
+    if not session_id:
+        return jsonify({
+            'success': False,
+            'error': 'Yoga session not found'
+        }), 400
+
+    try:
+        heart_rate_value = db.session.query(
+        func.avg(HeartRateData.heart_rate)  # Calculate the average heart rate
+        ).filter_by(
+            session_id=session_id,
+            pose_name=pose_name
+        ).scalar()  # Use scalar() to get the single value
+
+        heart_rate_value = round(heart_rate_value) if heart_rate_value else None
+        # Round to closest integer value for better readability
+
+        if not session_id:
+                return jsonify({'success': False, 'error': 'No active session found'}), 400
+
+        # Fetch the current YogaSession object using session_id
+        yoga_session = YogaSession.query.get(session_id)
+        if not yoga_session:
+            return jsonify({'success': False, 'error': 'Yoga session not found'}), 404
+        
+        minutes, seconds = map(int, time_string.split(':'))
+        time_spent = minutes + (seconds / 60)
+        
+        # Store the pose data in YogaPoseData table
+        pose_data = YogaPoseData(
+            session_id=session_id,
+            pose_name=pose_name,
+            avg_heart_rate=heart_rate_value,
+            calories_burned=calories_burned,
+            time_spent=time_spent,
+        )
+        db.session.add(pose_data)
+        db.session.commit()
+
+        return jsonify({'success': True, 'message': 'pose data saved successfully'}), 200
+
+    except Exception as e:
+        print(f"Error saving pose data: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+    
+
+@blueprint.route('/start_session')
+def start_session():
+    global session
+
+    try:
+        user_id=current_user.id
+        print(f"user_id: {user_id}")
+        # Session creation logic
+        yoga_session = YogaSession(user_id=user_id, start_time=datetime.now(timezone.utc),)
+        print(f"Created session: {yoga_session}")
+
+        # Add to session and commit
+        db.session.add(yoga_session)
+        db.session.commit()
+
+        # Check if it was successfully committed
+        print(f"Session ID after commit: {yoga_session.id}")
+
+        # Store session ID in Flask session
+        session['yoga_session_id'] = yoga_session.id
+        print(f"Session ID stored in Flask session: {session['yoga_session_id']}")
+
+        return jsonify({
+            'success': True,
+            'session_id': yoga_session.id
+        }), 200
+    except Exception as e:
+        print(e)
+        return jsonify({
+            'success': False,
+            'error': str(e)
+        }), 500
+    
+led_status = "OFF"
+    
+# Route to fetch LED control status for ESP32 (via HTTP GET)
+@blueprint.route('/led_control', methods=['GET'])
+def led_control():
+    global led_status
+    return led_status, 200
+
+# Route to update the LED status from the browser
+@blueprint.route('/set_led/<status>', methods=['GET'])
+def set_led(status):
+    global led_status
+    if status in ["ON", "OFF"]:
+        led_status = status
+        print(f"LED status set to: {led_status}")
+        return jsonify({"message": f"LED status set to {led_status}"}), 200
+    return jsonify({"error": "Invalid status"}), 400
+
 
 @blueprint.route('/interface/<int:pose_index>')
 def analyze(pose_index):
-    global entry
+    global fsrentry
     pose_data = [
-    {"name": "Cobra Pose (Utkatasana)", "level": "Beginner", "pose_key": "Cobra"},
+    {"name": "Tree Pose (Vrikshasana)", "level": "Beginner", "pose_key": "Tree"},
     {"name": "Chair Pose (Bhujangasana)", "level": "Beginner", "pose_key": "Chair"},
-    {"name": "Tree Pose (Vrikshasana)", "level": "Intermediate", "pose_key": "Tree"},
+    {"name": "Cobra Pose (Utkatasana)", "level": "Intermediate", "pose_key": "Cobra"},
     # Add more poses as needed
     ]
 
@@ -107,8 +221,7 @@ def analyze(pose_index):
         show_nav=False,
         pose=pose, 
         next_pose_index=next_pose_index,
-        is_last_pose=is_last_pose,
-        entry = fsrentry
+        is_last_pose=is_last_pose
         )
 
 
@@ -142,14 +255,14 @@ AUDIO_COOLDOWN = 5  # Cooldown period for audio feedback in seconds
 # Weighted confidence variables
 confidence_window = deque(maxlen=10)  # Store the last 10 confidence values
 
-
+noProgress = 0
 # Last detected pose
 last_detected_pose = None
 
 cap = cv2.VideoCapture(0)
 
 def generate_frames(target):
-    global camera_on, smoothed_landmarks, last_audio_time, last_detected_pose, last_feedback_confidence, last_feedback_time, high_confidence_spoken
+    global camera_on, cap, noProgress, smoothed_landmarks, last_audio_time, last_detected_pose, last_feedback_confidence, last_feedback_time, high_confidence_spoken
     global pose_tracker, current_pose, pose_hold_time, pose_start_time, rep_count, alpha, CONFIDENCE_THRESHOLD, POSE_HOLD_THRESHOLD, AUDIO_COOLDOWN
     cap = cv2.VideoCapture(0)
     camera_on = True
@@ -158,13 +271,14 @@ def generate_frames(target):
     else:
         update_text(f"target detected: {target}")
     
-    
+    speak(yoga_poses_data[target])
     
 
     while camera_on:
         ret, frame = cap.read()
         if not ret: 
             update_text("Camera feed failed. Restarting the camera.")
+
             cap.release()
             cap = cv2.VideoCapture(0)  # Re-initialize the camera
             continue
@@ -181,9 +295,10 @@ def generate_frames(target):
         # Extract landmarks
         landmarks = extract_landmarks(results)
 
-        speak(yoga_poses_data[target])
+        
 
         confidence = 0
+        weighted_confidence = 0
         
         if landmarks is not None:
             # Apply smoothing filter
@@ -269,15 +384,20 @@ def generate_frames(target):
 
 
         current_time = time.time()
-        isProgress = 0
+        
 
         
         if weighted_confidence <= 0.5:
             if current_time - last_feedback_time >= 5:  # Check if 3 seconds have passed
-                update_text("Pose not right. Try again Please.")
-                isProgress+=1
-                # if isProgress == 20:
-                #     speak(yoga_poses_data[target])
+                
+                noProgress+=1
+                
+                if noProgress == 20:
+                    speak(yoga_poses_data[target])
+                    update_text("pose not right 20 times")
+                else:
+                    update_text(f"Pose not right. Try again Please. {noProgress}")
+                
                 last_feedback_time = current_time
                 last_feedback_confidence = weighted_confidence
                 high_confidence_spoken = False
@@ -298,7 +418,7 @@ def generate_frames(target):
         else:  # This covers confidence >= 0.8
             if not high_confidence_spoken:
                 update_text("Congrats! You've got how to do this pose now.")
-                # speak("Congrats! You've got how to do this pose now.")
+                speak("Congrats! You've got how to do this pose now.")
                 high_confidence_spoken = True
                 last_feedback_time = current_time
                 last_feedback_confidence = weighted_confidence
@@ -337,12 +457,12 @@ def video_feed(target):
 
 @blueprint.route('/stop_video')
 def stop_video():
-    global camera_on,cap, smoothed_landmarks, last_audio_time, last_detected_pose, last_feedback_confidence, last_feedback_time, high_confidence_spoken
+    global camera_on, cap, smoothed_landmarks, last_audio_time, last_detected_pose, last_feedback_confidence, last_feedback_time, high_confidence_spoken
     global pose_tracker, current_pose, pose_hold_time, pose_start_time, rep_count, alpha, CONFIDENCE_THRESHOLD, POSE_HOLD_THRESHOLD, AUDIO_COOLDOWN
-    global reps, current_text
+    global reps, current_text, session
     
     
-
+    print("initialized")
     #initializing variables for feedback mech
     last_feedback_time = 0
     last_feedback_confidence = 0
@@ -377,5 +497,29 @@ def stop_video():
     # Last detected pose
     last_detected_pose = None
     camera_on = False
+
+     # Fetch current session ID from the Flask session
+    session_id = session.get('yoga_session_id')
+    print(session_id)
+
+    if session_id:
+        yoga_session = YogaSession.query.get(session_id)
+        if yoga_session:
+            # Set the end time of the session
+            yoga_session.end_time = datetime.now(timezone.utc)
+
+            # Calculate the total duration and total calories
+            yoga_session.calculate_total_duration()
+            yoga_session.calculate_total_calories()
+
+            # Commit the updated session data to the database
+            db.session.commit()
+
+            # Clear the session ID after session ends
+            session.pop('yoga_session_id', None)
+
     cap.release()
-    return redirect(url_for('home_blueprint.index'))
+    try:
+        return redirect(url_for('home_blueprint.index'))
+    except Exception as e:
+        print(f"error while redirecting to home: {e}")

@@ -1,8 +1,6 @@
-{% extends 'layouts/base.html' %}
-
-{% block title %} Profile {% endblock title %}
-{% block head %}
-{{ super() }} <!-- This includes any head content from the base template -->
+{% extends 'layouts/base.html' %} {% block title %} Profile {% endblock title %}
+{% block head %} {{ super() }}
+<!-- This includes any head content from the base template -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -79,37 +77,28 @@
     border-radius: 5px;
   }
 </style>
-{% endblock stylesheets %}
-
-{% block content %}
+{% endblock stylesheets %} {% block content %}
 
 <div class="container-fluid">
-
-  <div class="page-header min-height-300 border-radius-xl mt-4"
-    style="background-image: url('{{ config.ASSETS_ROOT }}/img/curved-images/curved0.jpg'); background-position-y: 50%;">
+  <div
+    class="page-header min-height-300 border-radius-xl mt-4"
+    style="background-image: url('{{ config.ASSETS_ROOT }}/img/curved-images/curved0.jpg'); background-position-y: 50%;"
+  >
     <span class="mask bg-gradient-primary opacity-6"></span>
   </div>
   <div class="card card-body blur shadow-blur mx-4 mt-n6 overflow-hidden">
     <div class="row gx-4">
-
       <div class="col-auto my-auto">
         <div class="h-100">
-          <h5 class="mb-1">
-            {{ current_user.username }}
-          </h5>
-          <p class="mb-0 font-weight-bold text-sm">
-            {{ current_user.email }}
-          </p>
+          <h5 class="mb-1">{{ current_user.username }}</h5>
+          <p class="mb-0 font-weight-bold text-sm">{{ current_user.email }}</p>
         </div>
       </div>
-
     </div>
   </div>
-
 </div>
 
 <div class="container-fluid py-4">
-
   <div class="row">
     <div class="col-12 col-xl-8">
       <div class="card h-auto mb-3">
@@ -120,8 +109,12 @@
             </div>
             <div class="col-md-4 text-end">
               <a href="javascript:;">
-                <i class="fas fa-user-edit text-secondary text-sm" data-bs-toggle="tooltip" data-bs-placement="top"
-                  title="Edit Profile"></i>
+                <i
+                  class="fas fa-user-edit text-secondary text-sm"
+                  data-bs-toggle="tooltip"
+                  data-bs-placement="top"
+                  title="Edit Profile"
+                ></i>
               </a>
             </div>
           </div>
@@ -131,34 +124,37 @@
             <div class="col-md-3 col-6">
               <ul class="list-group">
                 <li class="list-group-item border-0 ps-0 text-sm">
-                  <strong class="text-dark">Age:</strong> &nbsp; {{current_user.age}}
+                  <strong class="text-dark">Age:</strong> &nbsp;
+                  {{current_user.age}}
                 </li>
               </ul>
             </div>
             <div class="col-md-3 col-6">
               <ul class="list-group">
                 <li class="list-group-item border-0 ps-0 text-sm">
-                  <strong class="text-dark">Gender:</strong> &nbsp; {{current_user.gender}}
+                  <strong class="text-dark">Gender:</strong> &nbsp;
+                  {{current_user.gender}}
                 </li>
               </ul>
             </div>
             <div class="col-md-3 col-6">
               <ul class="list-group">
                 <li class="list-group-item border-0 ps-0 text-sm">
-                  <strong class="text-dark">Height:</strong> &nbsp; {{current_user.height}}
+                  <strong class="text-dark">Height:</strong> &nbsp;
+                  {{current_user.height}}
                 </li>
               </ul>
             </div>
             <div class="col-md-3 col-6">
               <ul class="list-group">
                 <li class="list-group-item border-0 ps-0 text-sm">
-                  <strong class="text-dark">Weight:</strong> &nbsp; {{current_user.weight}}
+                  <strong class="text-dark">Weight:</strong> &nbsp;
+                  {{current_user.weight}}
                 </li>
               </ul>
             </div>
           </div>
         </div>
-
       </div>
       <div class="card h-auto">
         <div class="card-body p-3">
@@ -171,7 +167,6 @@
 
     <div class="col-12 col-xl-4">
       <div class="card h-auto">
-
         <div class="card-body p-3">
           <!-- <h6 class="text-uppercase text-body text-xs font-weight-bolder">Account</h6>
               <ul class="list-group">
@@ -223,26 +218,13 @@
       </div>
     </div>
 
-
     <div class="col-12 col-xl-8">
-
-      <div class="card h-auto mb-4">
-        <div class="card-body p-3">
-          <div class="chart-container">
-            <canvas id="caloriesChart"></canvas>
-          </div>
+      <div class="card h-1/2 mb-4">
+        <div class="card-header text-center">
+          Co2 Levels
         </div>
-      </div>
-      <div class="card h-auto mb-4">
         <div class="card-body p-3">
-          <div class="chart-container">
-            <canvas id="tempratureChart"></canvas>
-          </div>
-        </div>
-      </div>
-      <div class="card h-auto mb-4">
-        <div class="card-body p-3">
-          <div class="chart-container">
+          <div class="chart-container h-auto">
             <canvas id="co2Chart"></canvas>
           </div>
         </div>
@@ -251,14 +233,14 @@
 
     <div class="col-12 col-xl-4 mt-3">
       <div class="card h-auto">
-        <div class="card-header pb-0 p-3">
+        <!-- <div class="card-header pb-0 p-3">
           FSR Data
-        </div>
+        </div> -->
         <div class="card-body p-3">
-          <div class="chart-container d-flex flex-column" id="fsr-container">
+          <!-- <div class="chart-container d-flex flex-column" id="fsr-container">
             <div class="row">
               <div id="fsr-data" class="col-12 d-flex flex-column ">
-                <!-- FSR data elements will be inserted here -->
+                FSR data elements will be inserted here
               </div>
             </div>
             <div class="row">
@@ -266,22 +248,55 @@
                 <canvas id="fsrAverageChart"></canvas>
               </div>
             </div>
+          </div> -->
+          <div class="chart-container">
+            <canvas id="caloriesChart"></canvas>
           </div>
         </div>
       </div>
+    </div>
 
+    <div class="card-body px-3 pb-2">
+      <div class="table-responsive">
+        <table class="table align-items-center mb-0">
+          <thead>
+            <tr>
+              <th
+                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+              >
+                Yoga Aasanas that you performed
+              </th>
+              <th
+                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+              >
+                Avg. Heart Rate
+              </th>
+              <th
+                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+              >
+                Total Calories Burnt
+              </th>
+              <th
+                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+              >
+                Total Time taken
+              </th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </div>
 
     <div class="col-12">
       <div class="card h-auto">
-        <div class="card-header pb-0 p-3">
-          Health Report
-        </div>
+        <div class="card-header pb-0 p-3">Health Report</div>
         <div class="card-body p-3">
           <div id="health-status"></div>
           <div class="p-3 text-center">
-            <button id="download-pdf" class="btn btn-primary m-0">Download Report as PDF</button>
-
+            <button id="download-pdf" class="btn btn-primary m-0">
+              Download Report as PDF
+            </button>
           </div>
         </div>
       </div>
@@ -289,7 +304,6 @@
   </div>
 
   {% include "includes/footer.html" %}
-
 </div>
 
 {% endblock content %}
@@ -299,259 +313,266 @@
 <script src="{{ config.ASSETS_ROOT }}/js/plugins/chartjs.min.js"></script>
 
 <script type="text/javascript">
-  const maxDataPoints = 50;
-  const charts = {
-    bmi: createGaugeChart('bmiChart', 'BMI', [15, 35]),
-    heartRate: createLineChart('heartRateChart', 'Heart Rate', [40, 180]),
-    calories: createBarChart('caloriesChart', 'Calories', [0, 1000]),
-    temperature: createLineChart('temperatureChart', 'Temperature', [35, 40]),
+    const maxDataPoints = 50;
+    const charts = {
+      bmi: createGaugeChart('bmiChart', 'BMI', [15, 35]),
+      heartRate: createLineChart('heartRateChart', 'Heart Rate', [40, 180]),
+      calories: createGaugeChart('caloriesChart', 'Calories', [0, 1000]),
+      // Co2: createLineChart('Co2Chart', 'Co2', [35, 40]),
 
-    fsrAverage: createLineChart('fsrAverageChart', 'FSR Average', [0, 100])
-  };
+      // fsrAverage: createLineChart('fsrAverageChart', 'FSR Average', [0, 100])
+    };
 
-  const fsrElements = ['leftHand', 'rightHand', 'base', 'leftFoot', 'rightFoot'];
-  const fsrContainer = document.getElementById('fsr-data');
-  fsrElements.forEach(element => {
-    const div = document.createElement('div');
-    div.className = 'fsr-item';
-    div.innerHTML = `<strong>${element} : </strong><span id="${element}">0</span>`;
-    fsrContainer.appendChild(div);
-  });
+    /* const fsrElements = ['leftHand', 'rightHand', 'base', 'leftFoot', 'rightFoot'];
+    const fsrContainer = document.getElementById('fsr-data');
+    fsrElements.forEach(element => {
+      const div = document.createElement('div');
+      div.className = 'fsr-item';
+      div.innerHTML = `<strong>${element} : </strong><span id="${element}">0</span>`;
+      fsrContainer.appendChild(div);
+    }); */
 
-  function createGaugeChart(id, label, range) {
-    return new Chart(document.getElementById(id), {
-      type: 'doughnut',
-      data: {
-        datasets: [{
-          data: [0, 100],
-          backgroundColor: ['#36a2eb', '#eee']
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        circumference: 180,
-        rotation: -90,
-        cutout: '80%',
-        plugins: {
-          title: { display: true, text: label },
-          legend: { display: false },
+    function createGaugeChart(id, label, range) {
+      return new Chart(document.getElementById(id), {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [0, 100],
+            backgroundColor: ['#36a2eb', '#eee']
+          }]
         },
-        tooltips: { enabled: false },
-      }
-    });
-  }
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          circumference: 180,
+          rotation: -90,
+          cutout: '80%',
+          plugins: {
+            title: { display: true, text: label },
+            legend: { display: false },
+          },
+          tooltips: { enabled: false },
+        }
+      });
+    }
 
-  function createLineChart(id, label, range) {
-    return new Chart(document.getElementById(id), {
+    function createLineChart(id, label, range) {
+      return new Chart(document.getElementById(id), {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [{
+            label: label,
+            data: [],
+            borderColor: '#36a2eb',
+            tension: 0.1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { min: range[0], max: range[1] }
+          },
+          plugins: {
+            title: { display: true, text: label }
+          }
+        }
+      });
+    }
+
+    /* function createBarChart(id, label, range) {
+      return new Chart(document.getElementById(id), {
+        type: 'bar',
+        data: {
+          labels: [],
+          datasets: [{
+            label: label,
+            data: [],
+            backgroundColor: '#36a2eb'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            y: { min: range[0], max: range[1] }
+          },
+          plugins: {
+            title: { display: true, text: label }
+          }
+        }
+      });
+    } */
+
+    function updateChart(chart, value, label) {
+      if (chart.config.type === 'doughnut') {
+        const normalizedValue = ((value - 15) / (35 - 15)) * 100;
+        chart.data.datasets[0].data = [normalizedValue, 100 - normalizedValue];
+        chart.options.plugins.title.text = `${label}: ${value.toFixed(2)}`;
+
+        if(label == 'BMI'){
+          if (value < 17) {
+            chart.data.datasets[0].backgroundColor[0] = '#e74c3c';  // Light Blue
+          }else if (value < 18.5) {
+            chart.data.datasets[0].backgroundColor[0] = '#f1c40f';  // Light Blue
+          } else if (value < 25) {
+            chart.data.datasets[0].backgroundColor[0] = '#2ecc71';  // Green
+          } else if (value < 30) {
+            chart.data.datasets[0].backgroundColor[0] = '#f1c40f';  // Yellow
+          } else {
+            chart.data.datasets[0].backgroundColor[0] = '#e74c3c';  // Red
+          }
+        }else chart.data.datasets[0].backgroundColor[0] = '#3498db';
+      } else {
+        chart.data.labels.push(label);
+        chart.data.datasets[0].data.push(value);
+        if (chart.data.labels.length > maxDataPoints) {
+          chart.data.labels.shift();
+          chart.data.datasets[0].data.shift();
+        }
+      }
+      chart.update();
+    }
+
+    function evaluateHealthStatus(data) {
+      let status = "Your health status is: ";
+      let issues = [];
+
+      if (data.bmi < 18.5 || data.bmi > 25) issues.push("BMI out of normal range");
+      if (data.heartRate < 60 || data.heartRate > 100) issues.push("Heart rate out of normal range");
+      // if (data.temperature < 36.1 || data.temperature > 37.2) issues.push("Body temperature out of normal range");
+      if (data.co2Levels > 1000) issues.push("High CO2 levels");
+
+      if (issues.length === 0) {
+        status += "Good. All metrics are within normal ranges.";
+      } else {
+        status += "Needs attention. " + issues.join(", ") + ".";
+      }
+
+      document.getElementById('health-status').textContent = status;
+    }
+
+    let heightdata = {{ current_user.height | safe }}
+    let weightdata = {{ current_user.weight | safe }}
+    const data = weightdata / (heightdata ** 2)
+    console.log(data)
+    updateChart(charts.bmi, data, 'BMI');
+
+
+    function generateAvgCO2Concentration() {
+      // Average CO2 concentration in air is around 400 to 450 ppm
+      const average = Math.floor(Math.random() * 100) + 400;
+      const variation = Math.random() * (10 + 10) - 10; // Small variation of +/- 10 ppm
+      return Math.round((average + variation) * 100) / 100;
+    }
+
+    // Generate CO2 concentration data
+    const co2Concentrations = [];
+    for (let i = 0; i < 20; i++) { // For example, generate 20 data points
+      co2Concentrations.push(generateAvgCO2Concentration());
+    }
+
+    // Plotting the CO2 concentration values using Chart.js
+    const ctx = document.getElementById('co2Chart').getContext('2d');
+    const co2Chart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: [],
+        labels: Array.from({ length: co2Concentrations.length }, (_, i) => i + 1),
         datasets: [{
-          label: label,
-          data: [],
-          borderColor: '#36a2eb',
-          tension: 0.1
+          label: 'CO2 Concentration (ppm)',
+          data: co2Concentrations,
+          borderColor: 'blue',
+          backgroundColor: 'rgba(0, 0, 255, 0.1)',
+          borderWidth: 2,
+          fill: true,
+          pointRadius: 4,
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          y: { min: range[0], max: range[1] }
-        },
-        plugins: {
-          title: { display: true, text: label }
-        }
-      }
-    });
-  }
-
-  function createBarChart(id, label, range) {
-    return new Chart(document.getElementById(id), {
-      type: 'bar',
-      data: {
-        labels: [],
-        datasets: [{
-          label: label,
-          data: [],
-          backgroundColor: '#36a2eb'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: { min: range[0], max: range[1] }
-        },
-        plugins: {
-          title: { display: true, text: label }
-        }
-      }
-    });
-  }
-
-  function updateChart(chart, value, label) {
-    if (chart.config.type === 'doughnut') {
-      const normalizedValue = ((value - 15) / (35 - 15)) * 100;
-      chart.data.datasets[0].data = [normalizedValue, 100 - normalizedValue];
-      chart.options.plugins.title.text = `BMI: ${value.toFixed(2)}`;
-
-      if (value < 18.5) {
-        chart.data.datasets[0].backgroundColor[0] = '#3498db';  // Light Blue
-      } else if (value < 25) {
-        chart.data.datasets[0].backgroundColor[0] = '#2ecc71';  // Green
-      } else if (value < 30) {
-        chart.data.datasets[0].backgroundColor[0] = '#f1c40f';  // Yellow
-      } else {
-        chart.data.datasets[0].backgroundColor[0] = '#e74c3c';  // Red
-      }
-    } else {
-      chart.data.labels.push(label);
-      chart.data.datasets[0].data.push(value);
-      if (chart.data.labels.length > maxDataPoints) {
-        chart.data.labels.shift();
-        chart.data.datasets[0].data.shift();
-      }
-    }
-    chart.update();
-  }
-
-  function evaluateHealthStatus(data) {
-    let status = "Your health status is: ";
-    let issues = [];
-
-    if (data.bmi < 18.5 || data.bmi > 25) issues.push("BMI out of normal range");
-    if (data.heartRate < 60 || data.heartRate > 100) issues.push("Heart rate out of normal range");
-    if (data.temperature < 36.1 || data.temperature > 37.2) issues.push("Body temperature out of normal range");
-    if (data.co2Levels > 1000) issues.push("High CO2 levels");
-
-    if (issues.length === 0) {
-      status += "Good. All metrics are within normal ranges.";
-    } else {
-      status += "Needs attention. " + issues.join(", ") + ".";
-    }
-
-    document.getElementById('health-status').textContent = status;
-  }
-
-  let heightdata = 1.8
-  let weightdata = 65
-  const data = weightdata / (heightdata ** 2)
-
-  updateChart(charts.bmi, data, 'BMI');
-
-
-  function generateAvgCO2Concentration() {
-    // Average CO2 concentration in air is around 400 to 450 ppm
-    const average = Math.floor(Math.random() * 100) + 400;
-    const variation = Math.random() * (10 + 10) - 10; // Small variation of +/- 10 ppm
-    return Math.round((average + variation) * 100) / 100;
-  }
-
-  // Generate CO2 concentration data
-  const co2Concentrations = [];
-  for (let i = 0; i < 20; i++) { // For example, generate 20 data points
-    co2Concentrations.push(generateAvgCO2Concentration());
-  }
-
-  // Plotting the CO2 concentration values using Chart.js
-  const ctx = document.getElementById('co2Chart').getContext('2d');
-  const co2Chart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: Array.from({ length: co2Concentrations.length }, (_, i) => i + 1),
-      datasets: [{
-        label: 'CO2 Concentration (ppm)',
-        data: co2Concentrations,
-        borderColor: 'blue',
-        backgroundColor: 'rgba(0, 0, 255, 0.1)',
-        borderWidth: 2,
-        fill: true,
-        pointRadius: 4,
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        x: {
-          title: {
-            display: true,
-            text: 'time'
-          }
-        },
-        y: {
-          title: {
-            display: true,
-            text: 'CO2 Concentration (ppm)'
+          x: {
+            title: {
+              display: true,
+              text: 'time'
+            }
           },
-          beginAtZero: false,
-          suggestedMin: 390,
-          suggestedMax: 460
+          y: {
+            title: {
+              display: true,
+              text: 'CO2 Concentration (ppm)'
+            },
+            beginAtZero: false,
+            suggestedMin: 390,
+            suggestedMax: 460,
+            ticks: {
+              stepSize: 10, // increase the number of ticks by making smaller steps
+            }
+          }
         }
       }
-    }
-  });
-
-
- /* const socket = new WebSocket('ws://localhost:8765');
-  socket.onmessage = function (event) {
-    const data = JSON.parse(event.data);
-
-    // Update personal data
-    document.getElementById('name').textContent = data.name;
-    document.getElementById('age').textContent = data.age;
-    document.getElementById('gender').textContent = data.gender;
-    document.getElementById('height').textContent = data.height.toFixed(1);
-    document.getElementById('weight').textContent = data.weight.toFixed(1);
-    document.getElementById('bmi-value').textContent = data.bmi.toFixed(1);
-
-    // Update charts
-    updateChart(charts.bmi, data.bmi, data.timestamp);
-    updateChart(charts.heartRate, data.heartRate, data.timestamp);
-    updateChart(charts.calories, data.calories, data.timestamp);
-    updateChart(charts.temperature, data.temperature, data.timestamp);
-    updateChart(charts.co2, data.co2Levels, data.timestamp);
-
-    // Update FSR data and calculate average
-    let fsrSum = 0;
-    for (const [key, value] of Object.entries(data.fsr)) {
-      document.getElementById(key).textContent = value.toFixed(1);
-      fsrSum += value;
-    }
-    const fsrAverage = fsrSum / Object.keys(data.fsr).length;
-    updateChart(charts.fsrAverage, fsrAverage, data.timestamp);
-
-    // Evaluate health status
-    evaluateHealthStatus(data);
-  }; 
-*/
-  document.getElementById('download-pdf').addEventListener('click', function () {
-    const { jsPDF } = window.jspdf;
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
-
-    html2canvas(document.body).then(canvas => {
-      const imgData = canvas.toDataURL('image/png');
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfAspectRatio = pdfHeight / pdfWidth;
-      const imgAspectRatio = imgProps.height / imgProps.width;
-      let renderWidth = pdfWidth;
-      let renderHeight = renderWidth * imgAspectRatio;
-
-      if (renderHeight > pdfHeight) {
-        renderHeight = pdfHeight;
-        renderWidth = renderHeight / imgAspectRatio;
-      }
-
-      const renderX = (pdfWidth - renderWidth) / 2;
-      const renderY = (pdfHeight - renderHeight) / 2;
-
-      pdf.addImage(imgData, 'PNG', renderX, renderY, renderWidth, renderHeight);
-      pdf.save('health_metrics_report.pdf');
     });
-  });
+
+
+   /* const socket = new WebSocket('ws://localhost:8765');
+    socket.onmessage = function (event) {
+      const data = JSON.parse(event.data);
+
+      // Update personal data
+      document.getElementById('name').textContent = data.name;
+      document.getElementById('age').textContent = data.age;
+      document.getElementById('gender').textContent = data.gender;
+      document.getElementById('height').textContent = data.height.toFixed(1);
+      document.getElementById('weight').textContent = data.weight.toFixed(1);
+      document.getElementById('bmi-value').textContent = data.bmi.toFixed(1);
+
+      // Update charts
+      updateChart(charts.bmi, data.bmi, data.timestamp);
+      updateChart(charts.heartRate, data.heartRate, data.timestamp);
+      updateChart(charts.calories, data.calories, data.timestamp);
+      updateChart(charts.temperature, data.temperature, data.timestamp);
+      updateChart(charts.co2, data.co2Levels, data.timestamp);
+
+      // Update FSR data and calculate average
+      let fsrSum = 0;
+      for (const [key, value] of Object.entries(data.fsr)) {
+        document.getElementById(key).textContent = value.toFixed(1);
+        fsrSum += value;
+      }
+      const fsrAverage = fsrSum / Object.keys(data.fsr).length;
+      updateChart(charts.fsrAverage, fsrAverage, data.timestamp);
+
+      // Evaluate health status
+      evaluateHealthStatus(data);
+    };
+  */
+    /* document.getElementById('download-pdf').addEventListener('click', function () {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+
+      html2canvas(document.body).then(canvas => {
+        const imgData = canvas.toDataURL('image/png');
+        const imgProps = pdf.getImageProperties(imgData);
+        const pdfAspectRatio = pdfHeight / pdfWidth;
+        const imgAspectRatio = imgProps.height / imgProps.width;
+        let renderWidth = pdfWidth;
+        let renderHeight = renderWidth * imgAspectRatio;
+
+        if (renderHeight > pdfHeight) {
+          renderHeight = pdfHeight;
+          renderWidth = renderHeight / imgAspectRatio;
+        }
+
+        const renderX = (pdfWidth - renderWidth) / 2;
+        const renderY = (pdfHeight - renderHeight) / 2;
+
+        pdf.addImage(imgData, 'PNG', renderX, renderY, renderWidth, renderHeight);
+        pdf.save('health_metrics_report.pdf');
+      });
+    }); */
 </script>
 {% endblock javascripts %}

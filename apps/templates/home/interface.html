@@ -1,6 +1,5 @@
-{% extends 'layouts/base.html' %}
-
-{% block title %} Video Interface {% endblock title %}
+{% extends 'layouts/base.html' %} {% block title %} Video Interface {% endblock
+title %}
 
 <!-- Specific CSS goes HERE -->
 {% block stylesheets %}
@@ -60,23 +59,13 @@
     cursor: pointer;
   }
 </style>
-{% endblock stylesheets %}
-
-{% block content %}
+{% endblock stylesheets %} {% block content %}
 <div class="container-fluid py-4">
-
   <div class="row">
     <!-- Left Side -->
     <div class="col-lg-2">
-      <div class="card h-auto"> <!-- Increased height -->
-
-        <div class="px-3 py-2">
-          <div class="d-flex align-items-center gap-2">
-            <h6 class="mb-0">Co2 Levels</h6>
-            <i class="fa-solid fa-stopwatch"></i>
-          </div>
-          <span class="h3 text-success fw-bold">00:00</span>
-        </div>
+      <div class="card h-auto">
+        <!-- Increased height -->
 
         <!-- Timer Section -->
         <div class="px-3 py-2">
@@ -102,11 +91,8 @@
             <h6 class="mb-0">Heart rate</h6>
             <i class="fa-solid fa-heartbeat"></i>
           </div>
-          <span class="h3 text-danger fw-bold">80 bpm</span>
+          <span class="h3 text-danger fw-bold" id="bpm">0 bpm</span>
         </div>
-
-       
-
       </div>
 
       <!-- Shapes Section -->
@@ -114,47 +100,61 @@
         <div class="d-flex justify-content-center align-items-center p-3">
           <div class="outer-rectangle">
             <div class="d-flex justify-content-between gap-2">
-              <div id="leftHand" class="circle {{'bg-success' if entry.leftHand > 300 and pose.pose_key == 'Cobra' else 'bg-danger' if entry.leftHand > 300 else 'bg-info' if pose.pose_key == 'Cobra' else ''}} "></div>
-              <div id="rightHand" class="circle {{'bg-success' if entry.rightHand > 300 and pose.pose_key == 'Cobra' else 'bg-danger' if entry.rightHand > 300 else 'bg-info' if pose.pose_key == 'Cobra' else ''}} "></div>
+              <!-- Use unique IDs for elements to update with JavaScript -->
+              <div id="circle-left-hand" class="circle"></div>
+              <div id="circle-right-hand" class="circle"></div>
             </div>
-            <div id="base" class="oval {{'bg-info' if pose.pose_key == 'Cobra' else ''}} "></div>
+            <div id="base" class="oval"></div>
             <div class="d-flex justify-content-between gap-2">
-              <div id="leftFoot" class="circle {{'bg-success' if entry.leftFoot > 300 and pose.pose_key != 'Tree' else 'bg-danger' if entry.leftFoot > 300 else '' if pose.pose_key == 'Tree' else 'bg-info'}} "></div>
-              <div id="rightFoot" class="circle {{'bg-success' if entry.rightFoot > 300 else 'bg-info'}}"></div>
+              <div id="circle-left-foot" class="circle"></div>
+              <div id="circle-right-foot" class="circle"></div>
             </div>
           </div>
         </div>
       </div>
 
       <div class="card text-center mt-3">
-         <!-- Stop Button Section -->
-         <div class="p-3">
+        <!-- Stop Button Section -->
+        <div class="p-3">
           <!-- <a href="{{ url_for('video_feed_blueprint.stop_video') }}" class="btn btn-secondary w-100 m-0">Stop</a> -->
-          <button id="stopButton" class="btn btn-secondary w-100 m-0">Stop</button>
+          <button id="stopButton" class="btn btn-secondary w-100 m-0">
+            Stop
+          </button>
         </div>
       </div>
     </div>
 
     <!-- Right Side -->
     <div class="col-lg-10">
-      <div class="row h-100"> <!-- Ensure row takes full height -->
+      <div class="row h-100">
+        <!-- Ensure row takes full height -->
 
         <!-- First Card -->
         <div class="col-md-6 mb-4">
           <div class="card h-100">
             <div class="p-4 text-center">
               <h6>{{ pose.name }}</h6>
-              <img class="w-75" src='{{ config.ASSETS_ROOT }}/img/yoga_poses/{{ pose.pose_key }}.jpg' alt='{{ pose_name }}'>
+              <img
+                class="w-75"
+                src="{{ config.ASSETS_ROOT }}/img/yoga_poses/{{ pose.pose_key }}.jpg"
+                alt="{{ pose_name }}"
+              />
             </div>
           </div>
         </div>
 
         <!-- Second Card -->
         <div class="col-md-6 mb-4">
-          <div class="card h-100 d-flex justify-content-center align-items-center">
+          <div
+            class="card h-100 d-flex justify-content-center align-items-center"
+          >
             <div class="p-4">
               <h6 id="reps-data">Reps : 0</h6>
-              <img src="{{ url_for('video_feed_blueprint.video_feed', target=pose.pose_key) }}" class="img-fluid" alt="Yoga Pose Video Feed">
+              <img
+                src="{{ url_for('video_feed_blueprint.video_feed', target=pose.pose_key) }}"
+                class="img-fluid"
+                alt="Yoga Pose Video Feed"
+              />
             </div>
           </div>
         </div>
@@ -165,22 +165,18 @@
             <div class="d-flex justify-content-between align-items-center">
               <h6 class="mb-0">Output</h6>
               <div id="feedback">data</div>
-              <a href="{{ url_for('video_feed_blueprint.analyze', pose_index=next_pose_index) }}" class="btn btn-secondary">
-                {% if is_last_pose %}
-                    Done
-                {% else %}
-                    Next
-                {% endif %}
+              <a
+                href="{{ url_for('video_feed_blueprint.analyze', pose_index=next_pose_index) }}"
+                class="btn btn-secondary"
+              >
+                {% if is_last_pose %} Done {% else %} Next {% endif %}
               </a>
             </div>
           </div>
         </div>
-
       </div>
     </div>
   </div>
-
-  
 
   <div id="stopModal" class="modal">
     <div class="modal-content">
@@ -189,143 +185,251 @@
       <p>Are you sure you want to stop the video? Here's a summary:</p>
       <ul>
         <li>Time Elapsed: <span id="elapsedTime">00:00</span></li>
-        <li>Calories Burned: <span id="caloriesBurned">500</span></li>
-        <li>Heart Rate: <span id="heartRate">80 bpm</span></li>
+        <li>Calories Burned: <span id="caloriesBurned">0</span></li>
+        <li>Heart Rate: <span id="heartRate">0 bpm</span></li>
       </ul>
-      <a href="{{ url_for('video_feed_blueprint.stop_video') }}" class="btn btn-secondary w-100 m-0">Stop</a>
+      <button
+        class="btn btn-secondary w-100 m-0"
+        id="stopButton2"
+      >
+        Stop
+      </button>
     </div>
   </div>
-
-  
-
 </div>
 {% endblock content %}
-
-
 
 <!-- Specific JS goes HERE -->
 {% block javascripts %}
 <script>
+
   window.addEventListener('beforeunload', function() {
       fetch("{{ url_for('video_feed_blueprint.stop_video') }}");
   })
-  
+
   function updateFeedback() {
     fetch('/get_text')
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('feedback').innerText = data.text;
-            console.log(data.text)
-        });
-}
+      .then(response => response.json())
+      .then(data => {
+          document.getElementById('feedback').innerText = data.text;
+          console.log(data.text)
+      });
+  }
 
-// Poll the server every second for new text
-setInterval(updateFeedback, 1000);
+  // Poll the server every second for new text
+  setInterval(updateFeedback, 1000);
 
-function updateReps() {
-  fetch('/get_reps')
+  function updateReps() {
+    fetch('/get_reps')
       .then(response => response.json())
       .then(data => {
           document.getElementById('reps-data').innerText = `Reps : ${data.text}`;
-          console.log(data.text)
       });
-}
-
-// Poll the server every second for new text
-setInterval(updateReps, 1000);
-
-
-// Get the modal
-const modal = document.getElementById("stopModal");
-
-// Get the button that opens the modal
-const btn = document.getElementById("stopButton");
-
-// Get the <span> element that closes the modal
-const span = document.getElementsByClassName("close")[0];
-
-// Get the confirm stop button inside the modal
-
-// When the user clicks the button, open the modal 
-btn.onclick = function() {
-  // Update modal content with the latest data
-  document.getElementById('elapsedTime').innerText = document.getElementById('timer').innerText;
-  document.getElementById('caloriesBurned').innerText = document.getElementById('calories-burned').innerText;
-  stopTimer()
-  modal.style.display = "block";
-}
-
-// When the user clicks on <span> (x), close the modal
-span.onclick = function() {
-  modal.style.display = "none";
-  continueTimer()
-}
-
-// When the user clicks anywhere outside of the modal, close it
-window.onclick = function(event) {
-  if (event.target == modal) {
-    modal.style.display = "none";
   }
-}
 
-// When the user clicks the confirm stop button, stop the video and close the modal
+  // Poll the server every second for new text
+  setInterval(updateReps, 1000);
+
+  const posekey = "{{pose.pose_key}}"
+  console.log("pose",posekey);
+
+  function getBPM() {
+    fetch('http://192.168.83.97:5000/view-data')
+      .then(response => response.json())
+      .then(data => {
+        const bpm = data["bpm"];
+        document.getElementById('bpm').innerText = `${bpm} bpm`;
+        console.log("bpm",bpm);
+
+        const timestamp = new Date().toISOString();  // Add a timestamp to each entry
+        saveBPM(bpm, timestamp, posekey);
+        
+      })
+  }
+
+  
+    
+  function saveBPM(bpm, timestamp, posekey) {
+    fetch('/save-bpm', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ bpm, timestamp, posekey })
+    })
+    .then(response => response.json())
+    .then(data => {
+      console.log('BPM saved:', data);
+    })
+    .catch(error => {
+      console.error('Error saving BPM:', error);
+    });
+  }
+
+  setInterval(getBPM, 1000)
 
 
 
+  function getFSR() {
+    fetch('http://192.168.83.97:5000/fsr-data')
+      .then(response => response.json())
+      .then(data => {
 
-  /* setInterval(()=>{
-    console.log(((Math.random()*100) + 400).toFixed(2))
-  }, 1000) */
+          // Update classes based on conditions
+          document.getElementById('circle-left-hand').className = 'circle ' +
+              (data.left_hand > 300 && posekey == 'Cobra' ? (setLed('OFF'), 'bg-success') :
+              data.left_hand > 300 ? (setLed('ON'), 'bg-danger') :
+              posekey === 'Cobra' ? (setLed('OFF'), 'bg-info') : '');
+
+          document.getElementById('circle-right-hand').className = 'circle ' +
+              (data.right_hand > 300 && posekey == 'Cobra' ? (setLed('OFF'), 'bg-success') :
+              data.right_hand > 300 ? (setLed('ON'), 'bg-danger') :
+              posekey === 'Cobra' ? (setLed('OFF'), 'bg-info') : '');
+
+          document.getElementById('base').className = 'oval ' +
+              (data.bottom > 300 && posekey === 'Cobra' ? (setLed('OFF'), 'bg-success') :
+                data.bottom > 300 ? (setLed('ON'), 'bg-danger') :
+                posekey === 'Cobra' ? (setLed('OFF'), 'bg-info') : '');
+
+          document.getElementById('circle-left-foot').className = 'circle ' +
+              (data.left_foot > 300 && posekey != 'Tree' ? (setLed('OFF'), 'bg-success') :
+              data.left_foot > 300 ? (setLed('ON'), 'bg-danger') :
+              posekey === 'Tree' ? '' : (setLed('OFF'), 'bg-info'));
+
+          document.getElementById('circle-right-foot').className = 'circle ' +
+              (data.right_foot > 300 ? (setLed('OFF'), 'bg-success') : (setLed('OFF'), 'bg-info'));
+      })
+      .catch(error => console.error('Error fetching data:', error));
+    }
+
+
+  // Optionally, refresh data periodically
+  setInterval(getFSR, 5000);
+
+  // Get the modal
+  const modal = document.getElementById("stopModal");
+
+  // Get the button that opens the modal
+  const btn = document.getElementById("stopButton");
+
+  // Get the <span> element that closes the modal
+  const span = document.getElementsByClassName("close")[0];
+
+  // Get the confirm stop button inside the modal
+
+  // When the user clicks the button, open the modal
+  btn.onclick = function() {
+    // Update modal content with the latest data
+    document.getElementById('elapsedTime').innerText = document.getElementById('timer').innerText;
+    document.getElementById('caloriesBurned').innerText = document.getElementById('calories-burned').innerText;
+    document.getElementById('heartRate').innerText = document.getElementById('bpm').innerText;
+
+    stopTimer()
+    modal.style.display = "block";
+  }
+
+  // When the user clicks on <span> (x), close the modal
+  span.onclick = function() {
+    modal.style.display = "none";
+    continueTimer()
+  }
+
+  // When the user clicks anywhere outside of the modal, close it
+  window.onclick = function(event) {
+    if (event.target == modal) {
+      modal.style.display = "none";
+    }
+  }
+
+  // When the user clicks the confirm stop button, stop the video and close the modal
+
+
+  document.getElementById('stopButton2').addEventListener('click', async function () {
+    // Send a POST request to the stop_video endpoint to stop the session
+    try {
+      const response = await fetch("{{ url_for('video_feed_blueprint.post_session') }}", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          // Example data to be sent (you can modify this)
+          pose: posekey,
+          calories: document.getElementById('caloriesBurned').innerText,
+          time: document.getElementById('elapsedTime').innerText,
+        }),
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        console.log("saved pose data")
+        // Redirect to home or any other page if necessary
+        await fetch("{{ url_for('video_feed_blueprint.stop_video') }}")
+        window.location.href = "{{ url_for('home_blueprint.index') }}"
+      } else {
+        console.log('Error stopping session: ' + result.error);
+      }
+    } catch (error) {
+      console.error("Error stopping session: ", error);
+      alert('Error stopping session.');
+    }
+  });
 
 
   let timerInterval;
-let startTime;
-let pausedTime = 0;
+  let startTime;
+  let pausedTime = 0;
 
-let met = {
-  "Cobra": 2.5,
-  "Chair": 3.5,
-  "Tree": 2.5
-}
+  let met = {
+    "Cobra": 2.5,
+    "Chair": 3.5,
+    "Tree": 2.5
+  }
 
-const MET =  met["{{pose.pose_key}}"] 
-console.log(MET)
+  const MET =  met["{{pose.pose_key}}"]
 
-const weightdata = {{ current_user.weight | safe}}
-console.log(weightdata)
+  const weightdata = {{ current_user.weight | safe}}
 
-function startTimer() {
-    startTime = Date.now() - pausedTime;
+  function startTimer() {
+      startTime = Date.now() - pausedTime;
 
-    timerInterval = setInterval(() => {
-        const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
-        const minutes = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
-        const seconds = (elapsedTime % 60).toString().padStart(2, '0');
-        document.getElementById('timer').innerText = `${minutes}:${seconds}`;
+      timerInterval = setInterval(() => {
+          const elapsedTime = Math.floor((Date.now() - startTime) / 1000);
+          const minutes = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
+          const seconds = (elapsedTime % 60).toString().padStart(2, '0');
+          document.getElementById('timer').innerText = `${minutes}:${seconds}`;
 
-        // Calculate calories burned
-        const durationInHours = elapsedTime / 3600; // Convert elapsed time to hours
-        caloriesBurned = MET * weightdata * durationInHours;
-        console.log(caloriesBurned)
-        document.getElementById('calories-burned').innerText = `${Math.round(caloriesBurned)}`;
+          // Calculate calories burned
+          const durationInHours = elapsedTime / 3600; // Convert elapsed time to hours
+          caloriesBurned = MET * weightdata * durationInHours;
+          document.getElementById('calories-burned').innerText = `${Math.round(caloriesBurned)}`;
 
-    }, 1000);
-}
+      }, 1000);
+  }
 
-function stopTimer() {
-    clearInterval(timerInterval);
-    pausedTime = Date.now() - startTime; // Save the paused time
-    const elapsedTime = Math.floor(pausedTime / 1000);
-    const minutes = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
-    const seconds = (elapsedTime % 60).toString().padStart(2, '0');
-    console.log(`Final Time: ${minutes}:${seconds}`);
-}
+  function stopTimer() {
+      clearInterval(timerInterval);
+      pausedTime = Date.now() - startTime; // Save the paused time
+      const elapsedTime = Math.floor(pausedTime / 1000);
+      const minutes = Math.floor(elapsedTime / 60).toString().padStart(2, '0');
+      const seconds = (elapsedTime % 60).toString().padStart(2, '0');
+      console.log(`Final Time: ${minutes}:${seconds}`);
+  }
 
-function continueTimer() {
-    startTimer(); // Resume the timer from where it left off
-}
+  function continueTimer() {
+      startTimer(); // Resume the timer from where it left off
+  }
 
-  window.onload = startTimer;
-  window.onbeforeunload = stopTimer;
+  function setLed(status) {
+    fetch('/set_led/' + status)
+      .then(response => response.json())
+      .then(data => {
+          console.log(data)  // Reload page to update LED status
+      })
+      .catch(error => console.error('Error:', error));
+  }
+
+    window.onload = startTimer;
+    window.onbeforeunload = stopTimer;
 </script>
 {% endblock javascripts %}

@@ -14,12 +14,16 @@ from apps.config import API_GENERATOR
 @login_required
 def index():
     pose_data = [
-    {"name": "Cobra Pose (Bhujangasana)", "level": "Beginner", "color": "#00fc7e", "pose_key": "Cobra", "next_pose_key": "Chair"},
-    {"name": "Chair Pose (...)", "level": "Beginner", "color": "#00fc7e", "pose_key": "Chair", "next_pose_key": "Tree"},
-    {"name": "Tree Pose (Vrksasana)", "level": "Intermediate", "color": "#63e5ff", "pose_key": "Tree", "next_pose_key": "Done"},
+    {"name": "Tree Pose (Vrikshasana)", "level": "Beginner", "color": "#63e5ff", "pose_key": "Tree", "next_pose_key": "Done"},
+    {"name": "Chair Pose (Bhujangasana)", "level": "Beginner", "color": "#00fc7e", "pose_key": "Chair", "next_pose_key": "Tree"},
+    {"name": "Cobra Pose (Bhujangasana)", "level": "Intermediate", "color": "#00fc7e", "pose_key": "Cobra", "next_pose_key": "Chair"},
     # Add more poses as needed
     ]
-    return render_template('home/index.html', segment='index', API_GENERATOR=len(API_GENERATOR), show_sideBar=True, poses=pose_data)
+    print("index route called")
+    try:
+        return render_template('home/index.html', segment='index', API_GENERATOR=len(API_GENERATOR), show_sideBar=True, poses=pose_data)
+    except Exception as e:
+        print(f"Error in rendering home: {e}")
 
 @blueprint.route('/<template>')
 @login_required
@@ -35,8 +39,9 @@ def route_template(template):
 
         # Serve the file (if exists) from app/templates/home/FILE.html
         if segment == 'interface':
-            return redirect(url_for('video_feed_blueprint.analyze', pose_index=0))        
-        return render_template("home/" + template, segment=segment, API_GENERATOR=len(API_GENERATOR), show_sideBar=True)
+            return redirect(url_for('video_feed_blueprint.analyze', pose_index=0))
+        elif segment != 'index':       
+            return render_template("home/" + template, segment=segment, API_GENERATOR=len(API_GENERATOR), show_sideBar=True)
 
     except TemplateNotFound:
         return render_template('home/page-404.html'), 404
