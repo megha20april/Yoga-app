@@ -70,12 +70,14 @@ def save_bpm():
     bpm = bpm_data['bpm']
     timestamp = bpm_data['timestamp']
     pose = bpm_data['pose_key']
+    user_id=current_user.id
     
     # Assuming the session ID is already created and stored
     session_id = session.get('yoga_session_id')
     
     # Store the BPM data in the database
     heart_rate_entry = HeartRateData(
+        user_id=user_id,
         session_id=session_id,
         heart_rate=bpm,
         timestamp=timestamp,
@@ -106,6 +108,7 @@ def post_session():
         heart_rate_value = db.session.query(
         func.avg(HeartRateData.heart_rate)  # Calculate the average heart rate
         ).filter_by(
+            user_id=current_user.id,
             session_id=session_id,
             pose_name=pose_name
         ).scalar()  # Use scalar() to get the single value
@@ -122,10 +125,11 @@ def post_session():
             return jsonify({'success': False, 'error': 'Yoga session not found'}), 404
         
         minutes, seconds = map(int, time_string.split(':'))
-        time_spent = minutes + (seconds / 60)
+        time_spent = float(f"{minutes}.{seconds:02d}")
         
         # Store the pose data in YogaPoseData table
         pose_data = YogaPoseData(
+            user_id=current_user.id,
             session_id=session_id,
             pose_name=pose_name,
             avg_heart_rate=heart_rate_value,
@@ -259,12 +263,12 @@ noProgress = 0
 # Last detected pose
 last_detected_pose = None
 
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 def generate_frames(target):
     global camera_on, cap, noProgress, smoothed_landmarks, last_audio_time, last_detected_pose, last_feedback_confidence, last_feedback_time, high_confidence_spoken
     global pose_tracker, current_pose, pose_hold_time, pose_start_time, rep_count, alpha, CONFIDENCE_THRESHOLD, POSE_HOLD_THRESHOLD, AUDIO_COOLDOWN
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
     camera_on = True
     if not target:
         update_text("no target")
@@ -280,7 +284,7 @@ def generate_frames(target):
             update_text("Camera feed failed. Restarting the camera.")
 
             cap.release()
-            cap = cv2.VideoCapture(0)  # Re-initialize the camera
+            cap = cv2.VideoCapture(1)  # Re-initialize the camera
             continue
 
         # Convert the BGR image to RGB

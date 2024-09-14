@@ -156,7 +156,10 @@
           </div>
         </div>
       </div>
-      <div class="card h-auto">
+      <div class="card h-auto mb-4">
+        <div class="card-header text-center">
+          Heart Rate (bpm)
+        </div>
         <div class="card-body p-3">
           <div class="chart-container">
             <canvas id="heartRateChart"></canvas>
@@ -256,37 +259,57 @@
       </div>
     </div>
 
-    <div class="card-body px-3 pb-2">
-      <div class="table-responsive">
-        <table class="table align-items-center mb-0">
-          <thead>
-            <tr>
-              <th
-                class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
-              >
-                Yoga Aasanas that you performed
-              </th>
-              <th
-                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
-              >
-                Avg. Heart Rate
-              </th>
-              <th
-                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
-              >
-                Total Calories Burnt
-              </th>
-              <th
-                class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
-              >
-                Total Time taken
-              </th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
+    <div class="col-12 mt-3">
+      <div class="card h-auto mb-4">
+        <div class="card-header text-center">
+          Last Session Yoga Poses Report
+        </div>
+        <div class="card-body px-3 pb-2">
+          <div class="table-responsive">
+            <table class="table align-items-center mb-0">
+              <thead>
+                <tr>
+                  <th
+                    class="text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+                  >
+                    Yoga Aasanas that you performed
+                  </th>
+                  <th
+                    class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+                  >
+                    Avg. Heart Rate
+                  </th>
+                  <th
+                    class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+                  >
+                    Total Calories Burnt
+                  </th>
+                  <th
+                    class="text-center text-uppercase text-secondary text-xxs font-weight-bolder opacity-7"
+                  >
+                    Total Time taken (Minutes.Seconds)
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for pose in poses_data %}
+                <tr>
+                  <td>{{ pose.pose_name }}</td>
+                  <td class="text-center">{{ pose.avg_heart_rate or 'N/A' }} bpm</td>
+                  <td class="text-center">{{ pose.calories_burned }} cal</td>
+                  <td class="text-center">
+                    {{ pose.time_spent }}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
+
+    
 
     <div class="col-12">
       <div class="card h-auto">
@@ -316,7 +339,7 @@
     const maxDataPoints = 50;
     const charts = {
       bmi: createGaugeChart('bmiChart', 'BMI', [15, 35]),
-      heartRate: createLineChart('heartRateChart', 'Heart Rate', [40, 180]),
+      // heartRate: createLineChart('heartRateChart', 'Heart Rate', [40, 180]),
       calories: createGaugeChart('caloriesChart', 'Calories', [0, 1000]),
       // Co2: createLineChart('Co2Chart', 'Co2', [35, 40]),
 
@@ -458,6 +481,7 @@
     const data = weightdata / (heightdata ** 2)
     console.log(data)
     updateChart(charts.bmi, data, 'BMI');
+    updateChart(charts.calories, {{ total_calories }}, 'Calories (Last Session)');
 
 
     function generateAvgCO2Concentration() {
@@ -503,6 +527,49 @@
             title: {
               display: true,
               text: 'CO2 Concentration (ppm)'
+            },
+            beginAtZero: false,
+            suggestedMin: 390,
+            suggestedMax: 460,
+            ticks: {
+              stepSize: 10, // increase the number of ticks by making smaller steps
+            }
+          }
+        }
+      }
+    });
+
+    const bpm = {{ bpm_data }}
+
+    const ctx2 = document.getElementById('heartRateChart').getContext('2d');
+    const heartRateChart = new Chart(ctx2, {
+      type: 'line',
+      data: {
+        labels: Array.from({ length: bpm.length }, (_, i) => i + 1),
+        datasets: [{
+          label: 'Heart Rate',
+          data: bpm,
+          borderColor: 'blue',
+          backgroundColor: 'rgba(0, 0, 255, 0.1)',
+          borderWidth: 2,
+          fill: true,
+          pointRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: {
+            title: {
+              display: true,
+              text: 'time'
+            }
+          },
+          y: {
+            title: {
+              display: true,
+              text: 'Heart Rate (bpm)'
             },
             beginAtZero: false,
             suggestedMin: 390,

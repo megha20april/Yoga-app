@@ -3,6 +3,7 @@ from apps import db
 class HeartRateData(db.Model):
     __tablename__ = 'HeartRateData'
 
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
     session_id = db.Column(db.Integer, db.ForeignKey('YogaSession.id'), primary_key=True)
     pose_name = db.Column(db.String(64), nullable=False)
     timestamp = db.Column(db.DateTime, primary_key=True)
@@ -20,6 +21,7 @@ class YogaPoseData(db.Model):
     avg_heart_rate = db.Column(db.Integer, nullable=True)
     time_spent = db.Column(db.Float, nullable=False)  # in minutes
     calories_burned = db.Column(db.Float, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('Users.id'), nullable=False)
 
     session = db.relationship('YogaSession', backref='pose_data')
 
